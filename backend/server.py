@@ -45,6 +45,8 @@ class StatusCheckCreate(BaseModel):
 class TextToSpeechRequest(BaseModel):
     text: str
     voice: str = "alloy"
+    speed: float = 1.0
+    model: str = "tts-1"
     
 class BatchTextToSpeechRequest(BaseModel):
     texts: List[dict]
