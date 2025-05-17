@@ -145,6 +145,15 @@ async def get_available_voices():
     ]
     return voices
 
+@api_router.get("/models")
+async def get_available_models():
+    # OpenAI's available models for TTS
+    models = [
+        {"id": "tts-1", "name": "TTS-1", "description": "Standard text-to-speech model"},
+        {"id": "tts-1-hd", "name": "TTS-1-HD", "description": "High-definition text-to-speech model"}
+    ]
+    return models
+
 # Include the router in the main app
 app.include_router(api_router)
 
