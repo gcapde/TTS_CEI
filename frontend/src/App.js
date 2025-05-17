@@ -308,38 +308,83 @@ function App() {
                       Remove
                     </button>
                   </div>
-                  <div className="mb-2">
-                    <label className="block text-gray-700 mb-1 text-sm">
-                      Filename (without extension)
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={item.filename}
-                      onChange={(e) =>
-                        updateBatchText(index, "filename", e.target.value)
-                      }
-                      placeholder="Enter filename (e.g. welcome_message)"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <label className="block text-gray-700 mb-1 text-sm">
+                        Filename (without extension)
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={item.filename}
+                        onChange={(e) =>
+                          updateBatchText(index, "filename", e.target.value)
+                        }
+                        placeholder="Enter filename (e.g. welcome_message)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 mb-1 text-sm">
+                        Voice
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={item.voice}
+                        onChange={(e) =>
+                          updateBatchText(index, "voice", e.target.value)
+                        }
+                      >
+                        {availableVoices.map((voiceOption) => (
+                          <option key={voiceOption.id} value={voiceOption.id}>
+                            {voiceOption.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <label className="block text-gray-700 mb-1 text-sm">
-                      Voice
-                    </label>
-                    <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={item.voice}
-                      onChange={(e) =>
-                        updateBatchText(index, "voice", e.target.value)
-                      }
-                    >
-                      {availableVoices.map((voiceOption) => (
-                        <option key={voiceOption.id} value={voiceOption.id}>
-                          {voiceOption.name}
-                        </option>
-                      ))}
-                    </select>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <label className="block text-gray-700 mb-1 text-sm">
+                        Model
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={item.model}
+                        onChange={(e) =>
+                          updateBatchText(index, "model", e.target.value)
+                        }
+                      >
+                        {availableModels.map((modelOption) => (
+                          <option key={modelOption.id} value={modelOption.id}>
+                            {modelOption.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 mb-1 text-sm">
+                        Speed ({item.speed}x)
+                      </label>
+                      <input
+                        type="range"
+                        min="0.25"
+                        max="4.0"
+                        step="0.05"
+                        value={item.speed}
+                        onChange={(e) =>
+                          updateBatchText(index, "speed", parseFloat(e.target.value))
+                        }
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>0.25x</span>
+                        <span>1x</span>
+                        <span>4x</span>
+                      </div>
+                    </div>
                   </div>
+                  
                   <div>
                     <label className="block text-gray-700 mb-1 text-sm">
                       Text
