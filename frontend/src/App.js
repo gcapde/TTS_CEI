@@ -189,19 +189,52 @@ function App() {
           {activeTab === "single" && (
             <div>
               <h2 className="text-2xl font-semibold mb-4">Single Text to Speech</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-gray-700 mb-2">Select Voice</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={voice}
+                    onChange={(e) => setVoice(e.target.value)}
+                  >
+                    {availableVoices.map((voiceOption) => (
+                      <option key={voiceOption.id} value={voiceOption.id}>
+                        {voiceOption.name} - {voiceOption.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2">Select Model</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                  >
+                    {availableModels.map((modelOption) => (
+                      <option key={modelOption.id} value={modelOption.id}>
+                        {modelOption.name} - {modelOption.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Select Voice</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={voice}
-                  onChange={(e) => setVoice(e.target.value)}
-                >
-                  {availableVoices.map((voiceOption) => (
-                    <option key={voiceOption.id} value={voiceOption.id}>
-                      {voiceOption.name} - {voiceOption.description}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-gray-700 mb-2">Speech Speed ({speed}x)</label>
+                <input
+                  type="range"
+                  min="0.25"
+                  max="4.0"
+                  step="0.05"
+                  value={speed}
+                  onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Slower (0.25x)</span>
+                  <span>Normal (1x)</span>
+                  <span>Faster (4x)</span>
+                </div>
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">Enter Text</label>
