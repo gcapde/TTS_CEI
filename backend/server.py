@@ -47,9 +47,11 @@ class TextToSpeechRequest(BaseModel):
     voice: str = "alloy"
     speed: float = 1.0
     model: str = "tts-1"
+    custom_voice_prompt: Optional[str] = None
     
 class BatchTextToSpeechRequest(BaseModel):
     texts: List[dict]
+    use_custom_prompt: bool = False
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
