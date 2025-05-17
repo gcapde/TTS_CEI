@@ -72,9 +72,10 @@ async def get_status_checks():
 async def text_to_speech(request: TextToSpeechRequest):
     try:
         response = openai.audio.speech.create(
-            model="tts-1",
+            model=request.model,
             voice=request.voice,
-            input=request.text
+            input=request.text,
+            speed=request.speed
         )
         
         # Get the audio content as bytes
