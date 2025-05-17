@@ -58,9 +58,23 @@ function App() {
 
     setIsGenerating(true);
     try {
+      // Prepare request payload
+      const payload = {
+        text,
+        speed,
+        model
+      };
+      
+      // Add voice or custom prompt based on selection
+      if (useCustomVoice && customVoicePrompt.trim()) {
+        payload.custom_voice_prompt = customVoicePrompt;
+      } else {
+        payload.voice = voice;
+      }
+      
       const response = await axios.post(
         `${API}/tts/single`,
-        { text, voice, speed, model },
+        payload,
         { responseType: 'blob' }
       );
 
