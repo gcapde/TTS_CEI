@@ -20,9 +20,6 @@ function App() {
   const audioRef = useRef(null);
 
   // State for batch text to speech
-  const [batchTexts, setBatchTexts] = useState([
-    { text: "", voice: "alloy", filename: "speech_1", speed: 1.0, model: "tts-1" }
-  ]);
   const [batchInputText, setBatchInputText] = useState('');
   const [batchCustomVoicePrompt, setBatchCustomVoicePrompt] = useState("");
   const [useBatchCustomVoice, setUseBatchCustomVoice] = useState(false);
@@ -105,12 +102,42 @@ function App() {
     }
   };
 
+  // Parse comma-separated quoted values
+  const parseBatchInput = (input) => {
+    if (!input.trim()) return [];
+    
+    const texts = [];
+    let currentFileName = 1;
+    
+    // Simple regex to match text in quotes (either " or ')
+    const regex = /"([^"]*)"|'([^']*)'/g;
+    let match;
+    
+    while ((match = regex.exec(input)) !== null) {
+      // match[1] will be the text inside double quotes, match[2] for single quotes
+      const text = match[1] || match[2];
+      texts.push({
+        text,
+        voice: batchVoice,
+        filename: `speech_${currentFileName}`,
+        speed: batchSpeed,
+        model: batchModel,
+        custom_voice_prompt: useBatchCustomVoice ? batchCustomVoicePrompt : ""
+      });
+      currentFileName++;
+    }
+    
+    return texts;
+  };
+
   // Handle batch text-to-speech generation
   const handleBatchGenerate = async () => {
+    // Parse the input text to get the array of speech items
+    const parsedTexts = parseBatchInput(batchInputText);
+    
     // Validate input
-    const emptyTexts = batchTexts.filter(item => !item.text.trim());
-    if (emptyTexts.length > 0) {
-      alert("Please fill in all text fields");
+    if (parsedTexts.length === 0) {
+      alert("Please enter at least one text item in quotes (e.g. \"Hello world\")");
       return;
     }
 
@@ -118,7 +145,10 @@ function App() {
     try {
       const response = await axios.post(
         `${API}/tts/batch`,
-        { texts: batchTexts },
+        { 
+          texts: parsedTexts,
+          use_custom_prompt: useBatchCustomVoice
+        },
         { responseType: 'blob' }
       );
 
@@ -130,42 +160,6 @@ function App() {
     } finally {
       setIsGeneratingBatch(false);
     }
-  };
-
-  // Add a new text field to batch generation
-  const addBatchText = () => {
-    setBatchTexts([
-      ...batchTexts,
-      { 
-        text: "", 
-        voice: "alloy", 
-        filename: `speech_${batchTexts.length + 1}`,
-        speed: 1.0,
-        model: "tts-1"
-      }
-    ]);
-  };
-
-  // Remove a text field from batch generation
-  const removeBatchText = (index) => {
-    if (batchTexts.length === 1) {
-      return; // Keep at least one item
-    }
-    const newTexts = [...batchTexts];
-    newTexts.splice(index, 1);
-    // Update filenames to maintain consistent numbering
-    const updatedTexts = newTexts.map((item, idx) => ({
-      ...item,
-      filename: `speech_${idx + 1}`
-    }));
-    setBatchTexts(updatedTexts);
-  };
-
-  // Update a specific field in batch texts
-  const updateBatchText = (index, field, value) => {
-    const newTexts = [...batchTexts];
-    newTexts[index][field] = value;
-    setBatchTexts(newTexts);
   };
 
   return (
@@ -211,38 +205,93 @@ function App() {
           {activeTab === "single" && (
             <div>
               <h2 className="text-2xl font-semibold mb-4">Single Text to Speech</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-gray-700 mb-2">Select Voice</label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={voice}
-                    onChange={(e) => setVoice(e.target.value)}
-                  >
-                    {availableVoices.map((voiceOption) => (
-                      <option key={voiceOption.id} value={voiceOption.id}>
-                        {voiceOption.name} - {voiceOption.description}
-                      </option>
-                    ))}
-                  </select>
+              
+              {/* Voice Selection Toggle */}
+              <div className="mb-4">
+                <div className="flex items-center">
+                  <input
+                    id="use-predefined-voice"
+                    type="radio"
+                    checked={!useCustomVoice}
+                    onChange={() => setUseCustomVoice(false)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="use-predefined-voice" className="ml-2 block text-gray-700">
+                    Use Predefined Voice
+                  </label>
                 </div>
-                <div>
-                  <label className="block text-gray-700 mb-2">Select Model</label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                  >
-                    {availableModels.map((modelOption) => (
-                      <option key={modelOption.id} value={modelOption.id}>
-                        {modelOption.name} - {modelOption.description}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex items-center mt-2">
+                  <input
+                    id="use-custom-voice"
+                    type="radio"
+                    checked={useCustomVoice}
+                    onChange={() => setUseCustomVoice(true)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="use-custom-voice" className="ml-2 block text-gray-700">
+                    Use Custom Voice Prompt
+                  </label>
                 </div>
               </div>
+              
+              {/* Predefined Voice Controls */}
+              {!useCustomVoice && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-gray-700 mb-2">Select Voice</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={voice}
+                      onChange={(e) => setVoice(e.target.value)}
+                    >
+                      {availableVoices.map((voiceOption) => (
+                        <option key={voiceOption.id} value={voiceOption.id}>
+                          {voiceOption.name} - {voiceOption.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-2">Select Model</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                    >
+                      {availableModels.map((modelOption) => (
+                        <option key={modelOption.id} value={modelOption.id}>
+                          {modelOption.name} - {modelOption.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+              
+              {/* Custom Voice Prompt */}
+              {useCustomVoice && (
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">
+                    Custom Voice Prompt
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows="3"
+                    value={customVoicePrompt}
+                    onChange={(e) => setCustomVoicePrompt(e.target.value)}
+                    placeholder="Describe the voice you want (e.g. 'A deep male voice with a British accent' or 'An enthusiastic female voice that sounds like a news anchor')"
+                  ></textarea>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Note: Custom voice is experimental and may not work with all descriptions.
+                  </p>
+                </div>
+              )}
+              
+              {/* Common Controls */}
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Speech Speed ({speed}x)</label>
+                <label className="block text-gray-700 mb-2">
+                  Speech Speed ({speed}x)
+                </label>
                 <input
                   type="range"
                   min="0.25"
@@ -258,6 +307,7 @@ function App() {
                   <span>Faster (4x)</span>
                 </div>
               </div>
+              
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">Enter Text</label>
                 <textarea
@@ -268,6 +318,7 @@ function App() {
                   placeholder="Enter the text you want to convert to speech..."
                 ></textarea>
               </div>
+              
               <button
                 className={`w-full py-2 px-4 rounded-md font-medium ${
                   isGenerating
@@ -311,128 +362,126 @@ function App() {
             <div>
               <h2 className="text-2xl font-semibold mb-4">Batch Text to Speech</h2>
               <p className="text-gray-600 mb-4">
-                Add multiple texts to generate a zip file containing all the
-                audio files.
+                Enter multiple texts as comma-separated values with each text in quotes.
               </p>
-
-              {batchTexts.map((item, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-200 rounded-md mb-4"
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-medium">Text #{index + 1}</h3>
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => removeBatchText(index)}
-                      disabled={batchTexts.length === 1}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
-                    <div>
-                      <label className="block text-gray-700 mb-1 text-sm">
-                        Filename (without extension)
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={item.filename}
-                        onChange={(e) =>
-                          updateBatchText(index, "filename", e.target.value)
-                        }
-                        placeholder="Enter filename (e.g. welcome_message)"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1 text-sm">
-                        Voice
-                      </label>
-                      <select
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={item.voice}
-                        onChange={(e) =>
-                          updateBatchText(index, "voice", e.target.value)
-                        }
-                      >
-                        {availableVoices.map((voiceOption) => (
-                          <option key={voiceOption.id} value={voiceOption.id}>
-                            {voiceOption.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
-                    <div>
-                      <label className="block text-gray-700 mb-1 text-sm">
-                        Model
-                      </label>
-                      <select
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={item.model}
-                        onChange={(e) =>
-                          updateBatchText(index, "model", e.target.value)
-                        }
-                      >
-                        {availableModels.map((modelOption) => (
-                          <option key={modelOption.id} value={modelOption.id}>
-                            {modelOption.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1 text-sm">
-                        Speed ({item.speed}x)
-                      </label>
-                      <input
-                        type="range"
-                        min="0.25"
-                        max="4.0"
-                        step="0.05"
-                        value={item.speed}
-                        onChange={(e) =>
-                          updateBatchText(index, "speed", parseFloat(e.target.value))
-                        }
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>0.25x</span>
-                        <span>1x</span>
-                        <span>4x</span>
-                      </div>
-                    </div>
-                  </div>
-                  
+              
+              {/* Voice Selection Toggle */}
+              <div className="mb-4">
+                <div className="flex items-center">
+                  <input
+                    id="batch-use-predefined-voice"
+                    type="radio"
+                    checked={!useBatchCustomVoice}
+                    onChange={() => setUseBatchCustomVoice(false)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="batch-use-predefined-voice" className="ml-2 block text-gray-700">
+                    Use Predefined Voice
+                  </label>
+                </div>
+                <div className="flex items-center mt-2">
+                  <input
+                    id="batch-use-custom-voice"
+                    type="radio"
+                    checked={useBatchCustomVoice}
+                    onChange={() => setUseBatchCustomVoice(true)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="batch-use-custom-voice" className="ml-2 block text-gray-700">
+                    Use Custom Voice Prompt
+                  </label>
+                </div>
+              </div>
+              
+              {/* Predefined Voice Controls */}
+              {!useBatchCustomVoice && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-gray-700 mb-1 text-sm">
-                      Text
-                    </label>
-                    <textarea
+                    <label className="block text-gray-700 mb-2">Select Voice</label>
+                    <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows="3"
-                      value={item.text}
-                      onChange={(e) =>
-                        updateBatchText(index, "text", e.target.value)
-                      }
-                      placeholder="Enter the text you want to convert to speech..."
-                    ></textarea>
+                      value={batchVoice}
+                      onChange={(e) => setBatchVoice(e.target.value)}
+                    >
+                      {availableVoices.map((voiceOption) => (
+                        <option key={voiceOption.id} value={voiceOption.id}>
+                          {voiceOption.name} - {voiceOption.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-2">Select Model</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={batchModel}
+                      onChange={(e) => setBatchModel(e.target.value)}
+                    >
+                      {availableModels.map((modelOption) => (
+                        <option key={modelOption.id} value={modelOption.id}>
+                          {modelOption.name} - {modelOption.description}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-              ))}
-
+              )}
+              
+              {/* Custom Voice Prompt */}
+              {useBatchCustomVoice && (
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">
+                    Custom Voice Prompt
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows="3"
+                    value={batchCustomVoicePrompt}
+                    onChange={(e) => setBatchCustomVoicePrompt(e.target.value)}
+                    placeholder="Describe the voice you want (e.g. 'A deep male voice with a British accent' or 'An enthusiastic female voice that sounds like a news anchor')"
+                  ></textarea>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Note: Custom voice is experimental and may not work with all descriptions.
+                  </p>
+                </div>
+              )}
+              
+              {/* Common Controls */}
               <div className="mb-4">
-                <button
-                  className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md font-medium text-gray-700"
-                  onClick={addBatchText}
-                >
-                  + Add Another Text
-                </button>
+                <label className="block text-gray-700 mb-2">
+                  Speech Speed ({batchSpeed}x)
+                </label>
+                <input
+                  type="range"
+                  min="0.25"
+                  max="4.0"
+                  step="0.05"
+                  value={batchSpeed}
+                  onChange={(e) => setBatchSpeed(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Slower (0.25x)</span>
+                  <span>Normal (1x)</span>
+                  <span>Faster (4x)</span>
+                </div>
               </div>
-
+              
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2">Enter Quoted Text Items</label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="5"
+                  value={batchInputText}
+                  onChange={(e) => setBatchInputText(e.target.value)}
+                  placeholder="Enter texts in quotes, separated by commas. Example: \"Hello world\", \"This is another text\", \"Third example\""
+                ></textarea>
+                <div className="text-sm text-gray-500 mt-1">
+                  <p>Format: Each text must be enclosed in quotes (either " or ') and separated by commas.</p>
+                  <p>Example: "First text", "Second text", 'Third text with single quotes'</p>
+                </div>
+              </div>
+              
               <button
                 className={`w-full py-2 px-4 rounded-md font-medium ${
                   isGeneratingBatch
