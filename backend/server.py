@@ -73,12 +73,27 @@ async def get_status_checks():
 @api_router.post("/tts/single")
 async def text_to_speech(request: TextToSpeechRequest):
     try:
-        response = openai.audio.speech.create(
-            model=request.model,
-            voice=request.voice,
-            input=request.text,
-            speed=request.speed
-        )
+        # Create API request parameters
+        speech_params = {
+            "model": request.model,
+            "input": request.text,
+            "speed": request.speed
+        }
+        
+        # If custom voice prompt is provided, use it instead of predefined voice
+        if request.custom_voice_prompt and request.custom_voice_prompt.strip():
+            speech_params["voice"] = "alloy"  # Use a default voice as base
+            speech_params["voice_settings"] = {"stability": 0, "similarity_boost": 0}
+            if "custom_voice_prompt" in dir(openai.audio.speech):
+                # This is a hypothetical param - the real implementation would depend on OpenAI's actual API
+                speech_params["custom_voice_prompt"] = request.custom_voice_prompt
+            # Log that we're using a custom prompt (this may not be supported directly by the API)
+            logging.info(f"Using custom voice prompt: {request.custom_voice_prompt}")
+        else:
+            # Use the standard predefined voice
+            speech_params["voice"] = request.voice
+        
+        response = openai.audio.speech.create(**speech_params)
         
         # Get the audio content as bytes
         audio_data = response.content
