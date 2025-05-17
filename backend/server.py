@@ -101,6 +101,8 @@ async def batch_text_to_speech(request: BatchTextToSpeechRequest):
                 text = item.get("text", "")
                 voice = item.get("voice", "alloy")
                 filename = item.get("filename", f"speech_{i+1}")
+                speed = item.get("speed", 1.0)
+                model = item.get("model", "tts-1")
                 
                 # Ensure filename has .mp3 extension
                 if not filename.endswith('.mp3'):
@@ -108,9 +110,10 @@ async def batch_text_to_speech(request: BatchTextToSpeechRequest):
                 
                 # Generate speech for each text
                 response = openai.audio.speech.create(
-                    model="tts-1",
+                    model=model,
                     voice=voice,
-                    input=text
+                    input=text,
+                    speed=speed
                 )
                 
                 # Add the audio file to the ZIP
