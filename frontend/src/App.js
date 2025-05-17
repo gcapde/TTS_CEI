@@ -114,7 +114,13 @@ function App() {
   const addBatchText = () => {
     setBatchTexts([
       ...batchTexts,
-      { text: "", voice: "alloy", filename: `speech_${batchTexts.length + 1}` }
+      { 
+        text: "", 
+        voice: "alloy", 
+        filename: `speech_${batchTexts.length + 1}`,
+        speed: 1.0,
+        model: "tts-1"
+      }
     ]);
   };
 
