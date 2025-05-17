@@ -13,6 +13,8 @@ function App() {
   const [voice, setVoice] = useState("alloy");
   const [speed, setSpeed] = useState(1.0);
   const [model, setModel] = useState("tts-1");
+  const [customVoicePrompt, setCustomVoicePrompt] = useState("");
+  const [useCustomVoice, setUseCustomVoice] = useState(false);
   const [singleAudioUrl, setSingleAudioUrl] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const audioRef = useRef(null);
@@ -21,6 +23,8 @@ function App() {
   const [batchTexts, setBatchTexts] = useState([
     { text: "", voice: "alloy", filename: "speech_1", speed: 1.0, model: "tts-1" }
   ]);
+  const [batchCustomVoicePrompt, setBatchCustomVoicePrompt] = useState("");
+  const [useBatchCustomVoice, setUseBatchCustomVoice] = useState(false);
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const [activeTab, setActiveTab] = useState("single");
   const [availableVoices, setAvailableVoices] = useState([]);
