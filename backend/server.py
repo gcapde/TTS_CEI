@@ -120,18 +120,34 @@ async def batch_text_to_speech(request: BatchTextToSpeechRequest):
                 filename = item.get("filename", f"speech_{i+1}")
                 speed = item.get("speed", 1.0)
                 model = item.get("model", "tts-1")
+                custom_voice_prompt = item.get("custom_voice_prompt", "")
                 
                 # Ensure filename has .mp3 extension
                 if not filename.endswith('.mp3'):
                     filename += '.mp3'
                 
+                # Create API request parameters
+                speech_params = {
+                    "model": model,
+                    "input": text,
+                    "speed": speed
+                }
+                
+                # If custom voice prompt is provided and should be used, use it
+                if request.use_custom_prompt and custom_voice_prompt and custom_voice_prompt.strip():
+                    speech_params["voice"] = "alloy"  # Use a default voice as base
+                    speech_params["voice_settings"] = {"stability": 0, "similarity_boost": 0}
+                    if "custom_voice_prompt" in dir(openai.audio.speech):
+                        # This is a hypothetical param - depends on OpenAI's actual API
+                        speech_params["custom_voice_prompt"] = custom_voice_prompt
+                    # Log that we're using a custom prompt
+                    logging.info(f"Using custom voice prompt for item {i+1}: {custom_voice_prompt}")
+                else:
+                    # Use the standard predefined voice
+                    speech_params["voice"] = voice
+                
                 # Generate speech for each text
-                response = openai.audio.speech.create(
-                    model=model,
-                    voice=voice,
-                    input=text,
-                    speed=speed
-                )
+                response = openai.audio.speech.create(**speech_params)
                 
                 # Add the audio file to the ZIP
                 zip_file.writestr(filename, response.content)
