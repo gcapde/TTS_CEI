@@ -56,7 +56,7 @@ function App() {
     try {
       const response = await axios.post(
         `${API}/tts/single`,
-        { text, voice },
+        { text, voice, speed, model },
         { responseType: 'blob' }
       );
 
