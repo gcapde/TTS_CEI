@@ -11,17 +11,20 @@ function App() {
   // State for single text to speech
   const [text, setText] = useState("");
   const [voice, setVoice] = useState("alloy");
+  const [speed, setSpeed] = useState(1.0);
+  const [model, setModel] = useState("tts-1");
   const [singleAudioUrl, setSingleAudioUrl] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const audioRef = useRef(null);
 
   // State for batch text to speech
   const [batchTexts, setBatchTexts] = useState([
-    { text: "", voice: "alloy", filename: "speech_1" }
+    { text: "", voice: "alloy", filename: "speech_1", speed: 1.0, model: "tts-1" }
   ]);
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const [activeTab, setActiveTab] = useState("single");
   const [availableVoices, setAvailableVoices] = useState([]);
+  const [availableModels, setAvailableModels] = useState([]);
 
   // Fetch available voices on component mount
   useEffect(() => {
