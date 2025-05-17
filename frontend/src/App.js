@@ -26,18 +26,23 @@ function App() {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [availableModels, setAvailableModels] = useState([]);
 
-  // Fetch available voices on component mount
+  // Fetch available voices and models on component mount
   useEffect(() => {
-    const fetchVoices = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`${API}/voices`);
-        setAvailableVoices(response.data);
+        const [voicesResponse, modelsResponse] = await Promise.all([
+          axios.get(`${API}/voices`),
+          axios.get(`${API}/models`)
+        ]);
+        
+        setAvailableVoices(voicesResponse.data);
+        setAvailableModels(modelsResponse.data);
       } catch (error) {
-        console.error("Error fetching voices:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchVoices();
+    fetchData();
   }, []);
 
   // Handle single text-to-speech generation
