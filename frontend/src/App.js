@@ -474,7 +474,7 @@ function App() {
                   rows="5"
                   value={batchInputText}
                   onChange={(e) => setBatchInputText(e.target.value)}
-                  placeholder="Enter texts in quotes, separated by commas. Example: \"Hello world\", \"This is another text\", \"Third example\""
+                  placeholder="Enter texts in quotes, separated by commas. Example: 'Hello world', 'This is another text', 'Third example'"
                 ></textarea>
                 <div className="text-sm text-gray-500 mt-1">
                   <p>Format: Each text must be enclosed in quotes (either " or ') and separated by commas.</p>
