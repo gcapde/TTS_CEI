@@ -1,0 +1,39 @@
+services:
+  backend:
+    image: tiangolo/uvicorn-gunicorn-fastapi:python3.11  # Imagen oficial para FastAPI
+    container_name: backend_service
+    ports:
+      - "8001:80"  # Mapea el puerto 80 del contenedor al 8001 local
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - DB_NAME=test_database
+      - OPENAI_API_KEY=your_openai_api_key_here  # Reemplaza con tu clave de API de OpenAI
+      - APP_MODULE=server:app
+    volumes:
+      - ./backend:/app  # Monta el código local en el contenedor
+    command: sh -c "pip install -r /app/requirements.txt && uvicorn server:app --host 0.0.0.0 --port 80"
+    depends_on:
+      - mongo
+
+  frontend:
+    image: node:20  # Imagen oficial de Node.js para ejecutar Next.js
+    container_name: frontend_service
+    working_dir: /app
+    ports:
+      - "3000:3000"  # Mapea el puerto 3000 del contenedor al 3000 local
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+    volumes:
+      - ./frontend:/app  # Monta el código local en el contenedor
+    command: sh -c "yarn install && yarn start"  # Instala dependencias y ejecuta el servidor de desarrollo
+
+  mongo:
+    image: mongo:7.0  # Imagen oficial de MongoDB
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
